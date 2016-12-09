@@ -9,15 +9,36 @@ using namespace std;
 // 只提供矩阵的创建和资源释放
 class mat
 {
-private:
+public:
 	int n;	// 矩阵大小
 	int **m_matrix;
-public:
+
 	mat(int _n) :n(_n)
 	{
 		m_matrix = new int*[n];
 		for (int i = 0;i < n;i++)
 			m_matrix[i] = new int[n];
+	}
+
+	mat(mat& m)
+	{
+		cout << "mat copy happen..." << endl;
+		n = m.n;
+		m_matrix = new int*[n];
+		for (int i = 0;i < n;i++)
+			m_matrix[i] = new int[n];
+		for (int i = 0;i < n;i++)
+			for (int j = 0;j < n;j++)
+				m_matrix[i][j] = m[i][j];
+	}
+
+	// 移动构造函数
+	mat(mat &&m) noexcept
+		:n(m.n), m_matrix(m.m_matrix)
+	{
+		cout << "right value copy" << endl;
+		m.m_matrix = nullptr;
+		m.n = 0;
 	}
 
 	~mat()
@@ -53,16 +74,40 @@ public:
 		assert(index >= 0 && index < n);
 		return m_matrix[index];
 	}
+
+	bool operator==(mat &m)
+	{
+		assert(n == m.n);
+		for (int i = 0;i < n;i++)
+			for (int j = 0;j < n;j++)
+				if (m_matrix[i][j] != m[i][j])
+					return false;
+		return true;
+	}
 };
+
+// 用随机数初始化矩阵
+void init_mat(mat &m)
+{
+	srand(time(0));
+	int n = m.n;
+	for (int i = 0;i < n;i++)
+		for (int j = 0;j < n;j++)
+			m[i][j] = rand() & 15;	// 随机数的范围为0-15
+}
+
 
 int main()
 {
 	mat m(4);
-	for (int i = 0;i < 4;i++)
-		for (int j = 0;j < 4;j++)
-			m[i][j] = i + j;
+	init_mat(m);
+	mat m2 = m;
 
 	cout << m << endl;
+	m2[0][0] = 1;
+	cout << m2 << endl;
+	cout << (m == m2) << endl;
+
 
 	system("pause");
 	return 0;
