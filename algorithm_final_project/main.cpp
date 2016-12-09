@@ -96,18 +96,34 @@ void init_mat(mat &m)
 			m[i][j] = rand() & 15;	// 随机数的范围为0-15
 }
 
+// 矩阵相乘，返回一个矩阵
+// 一般算法
+mat mutiply_mat(mat &m1, mat &m2)
+{
+	assert(m1.n == m2.n);
+
+	int n = m1.n;
+	mat result(n);
+
+	for (int i = 0;i < n;i++)
+	{
+		for (int j = 0;j < n;j++)
+		{
+			int s = 0;
+			for (int k = 0;k < n;k++)
+			{
+				s = s + m1[i][k] * m2[k][j];
+			}
+			result[i][j] = s;
+		}
+	}
+
+	return result;
+}
 
 int main()
 {
 	mat m(4);
-	init_mat(m);
-	mat m2 = m;
-
-	cout << m << endl;
-	m2[0][0] = 1;
-	cout << m2 << endl;
-	cout << (m == m2) << endl;
-
 
 	system("pause");
 	return 0;
