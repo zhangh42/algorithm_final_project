@@ -91,6 +91,43 @@ public:
 	}
 };
 
+// 矩阵减法
+mat sub_mat(mat &m1, mat &m2)
+{
+	int n = m1.n;
+	mat result(n);
+
+	for (int i = 0;i < n;i++)
+		for (int j = 0;j < n;j++)
+			result[i][j] = m1[i][j] - m2[i][j];
+
+	return result;
+}
+
+// 转置矩阵
+mat transpose_mat(mat &m)
+{
+	int n = m.n;
+	mat result(n);
+	for (int i = 0;i < n;i++)
+		for (int j = 0;j < n;j++)
+			result[j][i] = m[i][j];
+	return result;
+}
+
+// 矩阵加法
+mat add_mat(mat &m1, mat &m2)
+{
+	int n = m1.n;
+	mat result(n);
+
+	for (int i = 0;i < n;i++)
+		for (int j = 0;j < n;j++)
+			result[i][j] = m1[i][j] + m2[i][j];
+
+	return result;
+}
+
 // 用随机数初始化矩阵
 void init_mat(mat &m)
 {
@@ -127,40 +164,28 @@ mat mutiply_mat(mat &m1,mat &m2)
 	return result;
 }
 
-// 矩阵加法
-mat add_mat(mat &m1, mat &m2)
+// 一般矩阵，cache优化
+mat mutiply_mat_cache(mat &m1, mat &m2)
 {
+	assert(m1.n == m2.n);
+	auto start_time = clock();
 	int n = m1.n;
 	mat result(n);
 
-	for (int i = 0;i < n;i++)
-		for (int j = 0;j < n;j++)
-			result[i][j] = m1[i][j] + m2[i][j];
-
-	return result;
-}
-
-// 矩阵减法
-mat sub_mat(mat &m1, mat &m2)
-{
-	int n = m1.n;
-	mat result(n);
+	mat m3 = transpose_mat(m2);
 
 	for (int i = 0;i < n;i++)
+	{
 		for (int j = 0;j < n;j++)
-			result[i][j] = m1[i][j] - m2[i][j];
-
-	return result;
-}
-
-// 转置矩阵
-mat transpose_mat(mat &m)
-{
-	int n = m.n;
-	mat result(n);
-	for (int i = 0;i < n;i++)
-		for (int j = 0;j < n;j++)
-			result[j][i] = m[i][j];
+		{
+			int s = 0;
+			for (int k = 0;k < n;k++)
+			{
+				s += m1[i][k] * m3[j][k];
+			}
+			result[i][j] = s;
+		}
+	}
 	return result;
 }
 
@@ -170,7 +195,7 @@ mat strassen_mutiply_mat_version1(mat &m1, mat &m2)
 	assert(m1.n == m2.n);
 
 	int n = m1.n;
-	if (n <= 25)
+	if (n <= 50)
 		return mutiply_mat(m1, m2);
 
 	mat result(n);
@@ -278,22 +303,23 @@ int main()
 	auto start_time = clock();
 
 	
-	int n = 500;
+	int n = 3000;
 	mat m1(n), m2(n);
 	init_mat(m1);
 	init_mat(m2);
 
-	mat m3 = mutiply_mat(m1, m2);
+	mat m3 = mutiply_mat_cache(m1, m2);
 	auto mid = clock();
+	//mat m4 = mutiply_mat_cache(m1, m2);
 	mat m4 = strassen_mutiply_mat_version1(m1, m2);
 	auto end = clock();
 
-	cout << m3 << endl;
-	cout << m4 << endl;
+	//cout << m3 << endl;
+	//cout << m4 << endl;
 	cout << "time: " << mid - start_time << endl;
-	cout << "time: " << end - start_time << endl;
-	cout << (m3 == m4) << endl;
+	cout << "time: " << end - mid << endl;
 	
+	assert(m3 == m4);
 	system("pause");
 	return 0;
 }
