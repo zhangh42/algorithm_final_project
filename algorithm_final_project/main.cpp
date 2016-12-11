@@ -4,6 +4,7 @@
 #include<cassert>
 #include<cstdlib>
 #include<ctime>
+#include<omp.h>
 using namespace std;
 
 // 矩阵
@@ -142,27 +143,59 @@ void init_mat(mat &m)
 
 // 矩阵相乘，返回一个矩阵
 // 一般算法
-mat mutiply_mat(mat &m1,mat &m2)
+mat mutiply_mat(mat &m1, mat &m2)
 {
 	assert(m1.n == m2.n);
 	auto start_time = clock();
 	int n = m1.n;
 	mat result(n);
+	omp_set_num_threads(2);
+	int k, i, j;
 
-	for (int i = 0;i < n;i++)
+	for (i = 0;i < n;i++)
 	{
-		for (int j = 0;j < n;j++)
+		for (j = 0;j < n;j++)
 		{
 			int s = 0;
-			for (int k = 0;k < n;k++)
+			for (k = 0;k < n;k++)
 			{
 				s += m1[i][k] * m2[k][j];
 			}
 			result[i][j] = s;
 		}
 	}
+
 	return result;
 }
+
+
+// 矩阵相乘，返回一个矩阵
+// 并行算法
+mat mutiply_mat_parallel(mat &m1, mat &m2)
+{
+	assert(m1.n == m2.n);
+	auto start_time = clock();
+	int n = m1.n;
+	mat result(n);
+	omp_set_num_threads(4);
+	int k, i, j;
+#pragma omp parallel private(i,j,k) shared(result)
+	{ 
+#pragma omp for
+		for (i = 0;i < n;i++)
+		{
+			for (j = 0;j < n;j++)
+			{				
+				for (k = 0;k < n;k++)
+				{
+					result[i][j] += m1[i][k] * m2[k][j];
+				}
+			}
+		}
+	}
+	return result;
+}
+
 
 // 一般矩阵，cache优化
 mat mutiply_mat_cache(mat &m1, mat &m2)
@@ -195,7 +228,7 @@ mat strassen_mutiply_mat_version1(mat &m1, mat &m2)
 	assert(m1.n == m2.n);
 
 	int n = m1.n;
-	if (n <= 50)
+	if (n <= 100)
 		return mutiply_mat(m1, m2);
 
 	mat result(n);
@@ -300,22 +333,20 @@ mat strassen_mutiply_mat_version1(mat &m1, mat &m2)
 
 int main()
 {
-	auto start_time = clock();
-
-	
-	int n = 3000;
+		
+	int n = 1000;
 	mat m1(n), m2(n);
 	init_mat(m1);
 	init_mat(m2);
-
-	mat m3 = mutiply_mat_cache(m1, m2);
+	auto start_time = clock();
+	mat m3 = mutiply_mat(m1, m2);
 	auto mid = clock();
-	//mat m4 = mutiply_mat_cache(m1, m2);
-	mat m4 = strassen_mutiply_mat_version1(m1, m2);
+	mat m4 = mutiply_mat_parallel(m1, m2);
+	//mat m4 = strassen_mutiply_mat_version1(m1, m2);
 	auto end = clock();
 
-	//cout << m3 << endl;
-	//cout << m4 << endl;
+	cout << m3 << endl;
+	cout << m4 << endl;
 	cout << "time: " << mid - start_time << endl;
 	cout << "time: " << end - mid << endl;
 	

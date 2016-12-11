@@ -18,3 +18,10 @@
 ### 优化方案
 
 1. 当矩阵规模小于25x25的时候，可以考虑直接调用传统算法
+
+## 多线程并行运算
+
+参考openMP，vs自带这个库。
+
+[openMP VS2015](https://msdn.microsoft.com/en-us/library/tt15eb9t.aspx)
+
